@@ -45,8 +45,8 @@ static void stop_recording(void);
 static int ensure_rec_dir_exists(void);
 static void update_status_display(void);
 static void update_space_info(void);
-static void update_duration_display(void); // 新增：更新时长显示
-static void duration_timer_cb(lv_timer_t* timer); // 新增：定时器回调
+static void update_duration_display(void);
+static void duration_timer_cb(lv_timer_t* timer);
 static void generate_filename(char* buffer, size_t size);
 static void show_delete_dialog(void);
 static void hide_delete_dialog(void);
@@ -72,32 +72,32 @@ lv_obj_t* page_recorder_create(void) {
 
 // 创建界面
 static void create_ui(void) {
-    // 存储空间信息标签 (顶部) - 格式: 已用/总共 MB (百分比%)
+    // 存储空间，妈妈再也不用担心我看不到剩余存储空间了（
     label_space = lv_label_create(scr);
     lv_obj_set_width(label_space, lv_pct(90));
     lv_obj_align(label_space, LV_ALIGN_TOP_MID, 0, 10);
     lv_obj_set_style_text_align(label_space, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(label_space, lv_color_hex(0x888888), 0); // 灰色但不太灰
+    lv_obj_set_style_text_color(label_space, lv_color_hex(0x888888), 0);
     update_space_info();
     
-    // 状态标签 (存储空间下方)
+    // 状态标签
     label_status = lv_label_create(scr);
     lv_obj_set_width(label_status, lv_pct(90));
     lv_obj_align(label_status, LV_ALIGN_TOP_MID, 0, 35);
     lv_label_set_text(label_status, "状态: 空闲");
     lv_obj_set_style_text_align(label_status, LV_TEXT_ALIGN_CENTER, 0);
     
-    // 录音时长标签 (状态标签下方) - 新增
+    // 时长
     label_duration = lv_label_create(scr);
     lv_obj_set_width(label_duration, lv_pct(90));
-    lv_obj_align(label_duration, LV_ALIGN_TOP_MID, 0, 60);
-    lv_label_set_text(label_duration, "时长: 00:00");
+    lv_obj_align(label_duration, LV_ALIGN_TOP_MID, 0, 58);
+    lv_label_set_text(label_duration, "时长: 00:00"); //其实我想改成滚木的
     lv_obj_set_style_text_align(label_duration, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(label_duration, lv_color_hex(0x666666), 0);
     
-    // 录音按钮 (中央) - 改小为160x60
+    // 录音按钮
     btn_record = lv_btn_create(scr);
-    lv_obj_set_size(btn_record, 160, 60);
+    lv_obj_set_size(btn_record, 145, 65);
     lv_obj_align(btn_record, LV_ALIGN_CENTER, 0, 0);
     lv_obj_add_event_cb(btn_record, btn_record_cb, LV_EVENT_CLICKED, NULL);
     
@@ -105,25 +105,25 @@ static void create_ui(void) {
     lv_label_set_text(label_btn, "开始录音");
     lv_obj_center(label_btn);
     
-    // 文件名显示 (按钮下方)
+    // 文件名
     label_filename = lv_label_create(scr);
     lv_obj_set_width(label_filename, lv_pct(90));
-    lv_obj_align(label_filename, LV_ALIGN_CENTER, 0, 40);
+    lv_obj_align(label_filename, LV_ALIGN_CENTER, 0, 55);
     lv_label_set_text(label_filename, "文件: (未开始)");
     lv_obj_set_style_text_align(label_filename, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(label_filename, lv_color_hex(0x666666), 0);
     
-    // 返回按钮 (左下角)
+    // 返回按钮
     btn_back = lv_btn_create(scr);
     lv_obj_set_size(btn_back, lv_pct(25), lv_pct(12));
     lv_obj_align(btn_back, LV_ALIGN_BOTTOM_LEFT, 0, 0);
     
     lv_obj_t* lbl_back = lv_label_create(btn_back);
-    lv_label_set_text(btn_back_label, CUSTOM_SYMBOL_BACK "");
+    lv_label_set_text(lbl_back, CUSTOM_SYMBOL_BACK "");
     lv_obj_center(lbl_back);
     lv_obj_add_event_cb(btn_back, btn_back_cb, LV_EVENT_CLICKED, NULL);
     
-    // 删除按钮 (右下角) - 45×28像素
+    // 删除按钮
     btn_delete = lv_btn_create(scr);
     lv_obj_set_size(btn_delete, 45, 28);
     lv_obj_align(btn_delete, LV_ALIGN_BOTTOM_RIGHT, -2, 0);
@@ -133,13 +133,15 @@ static void create_ui(void) {
     lv_obj_center(lbl_delete);
     lv_obj_add_event_cb(btn_delete, btn_delete_cb, LV_EVENT_CLICKED, NULL);
     
-    // 设置删除按钮样式
+        // 删除的样子
     lv_obj_set_style_bg_color(btn_delete, lv_color_hex(0xFF4444), LV_PART_MAIN);
     lv_obj_set_style_text_color(lbl_delete, lv_color_white(), 0);
     
-    // 初始化对话框（但先不显示）
+    // 初始化对话框
     dialog_bg = NULL;
     dialog_box = NULL;
+    
+    update_status_display();
 }
 
 // 录音按钮回调
@@ -160,14 +162,14 @@ static void btn_back_cb(lv_event_t* e) {
         return;
     }
     
-    // 如果正在录音，先停止（后台延长5秒）
+    // 如果正在录音，先停下来
     if (is_recording) {
-        // 界面立即反馈
+        // 界面反馈
         is_recording = 0;
         lv_label_set_text(label_status, "状态: 正在保存...");
         update_status_display();
         
-        // 停止时长定时器
+        // 停止定时器
         if (duration_timer) {
             lv_timer_del(duration_timer);
             duration_timer = NULL;
@@ -175,7 +177,7 @@ static void btn_back_cb(lv_event_t* e) {
         // 重置时长显示
         lv_label_set_text(label_duration, "时长: 00:00");
         
-        // 后台继续录音5秒
+        // 后台继续录音，气死我了搞了半天都不能让它完整录下来，只能延长一会，不然录不完整
         pid_t pid = fork();
         if (pid == 0) {
             sleep(3);
@@ -187,7 +189,7 @@ static void btn_back_cb(lv_event_t* e) {
     page_back();
 }
 
-// 删除按钮回调 - 显示确认对话框
+// 删除按钮回调 显示确认对话框
 static void btn_delete_cb(lv_event_t* e) {
     show_delete_dialog();
 }
@@ -276,7 +278,7 @@ static void stop_recording(void) {
     }
 }
 
-// 时长更新定时器回调 - 新增
+// 时长更新定时器回调
 static void duration_timer_cb(lv_timer_t* timer) {
     if (!is_recording || recording_start_time == 0) {
         return;
@@ -285,7 +287,7 @@ static void duration_timer_cb(lv_timer_t* timer) {
     update_duration_display();
 }
 
-// 更新时长显示 - 新增
+// 更新时长显示
 static void update_duration_display(void) {
     if (!is_recording || recording_start_time == 0) {
         return;
@@ -294,7 +296,7 @@ static void update_duration_display(void) {
     time_t now = time(NULL);
     long duration = now - recording_start_time;
     
-    // 格式化为 分:秒 (MM:SS)
+    // 格式化为 mm:ss
     int minutes = duration / 60;
     int seconds = duration % 60;
     
@@ -309,7 +311,7 @@ static void show_delete_dialog(void) {
     
     dialog_showing = 1;
     
-    // 如果正在录音，先停止（后台延长5秒）
+    // 如果正在录音，先停下 秋豆麻袋！
     if (is_recording) {
         // 界面立即反馈停止
         is_recording = 0;
@@ -502,3 +504,20 @@ static void update_status_display(void) {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//你好，代码写的这么烂你居然都看完了，不要喷啦(>﹏<)
