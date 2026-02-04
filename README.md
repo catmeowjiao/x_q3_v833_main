@@ -21,5 +21,3 @@ https://github.com/RobinNotBad/lvgl_v833_q3
 * 运行./build.sh
 * 目标文件为"demo"
 
-## 其他
-* 字体使用了：**阿里巴巴普惠体** Medium、FontAwesome 5 Free Solid，为了在lvgl中正常使用图标，对这两个字体进行了合并。若要换用自己的字体，可以使用FontForge软件，将FontAwesome中 #61440 之后的所有图标复制到现有字体中，再进行大小缩放。
