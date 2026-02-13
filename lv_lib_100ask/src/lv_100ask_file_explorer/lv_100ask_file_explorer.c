@@ -628,10 +628,9 @@ static void show_dir(lv_obj_t * obj, char * path)
         return;
     }
 
-    lv_table_set_cell_value_fmt(explorer->file_list, index++, 0, LV_SYMBOL_DIRECTORY "  %s", ".");
+    /* Do not show current directory '.'; only show parent '..' */
     lv_table_set_cell_value_fmt(explorer->file_list, index++, 0, LV_SYMBOL_DIRECTORY "  %s", "..");
     lv_table_set_cell_value(explorer->file_list, 0, 1, "0");
-    lv_table_set_cell_value(explorer->file_list, 1, 1, "0");
 
     while(1) {
         res = lv_fs_dir_read(&dir, fn);
