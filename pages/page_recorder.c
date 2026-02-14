@@ -436,7 +436,7 @@ static int ensure_rec_dir_exists(void)
     return 1;
 }
 
-// 更新存储空间信息 - 格式：已用/总共 MB (百分比%)
+// 更新存储空间信息
 static void update_space_info(void)
 {
     char cmd[256];
