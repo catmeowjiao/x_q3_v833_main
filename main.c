@@ -288,7 +288,7 @@ void sysSleep(void){
 void sysDeepSleep(void){
 	deepSleep = true;
     sleepTs   = -1;
-    
+
     // 睡死过去，相当省电
     system("echo \"0\" >/sys/class/rtc/rtc0/wakealarm");
     system("echo \"mem\" > /sys/power/state");
