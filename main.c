@@ -5,7 +5,9 @@
 #include "lv_lib_100ask/lv_lib_100ask.h"
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
+#include <linux/fb.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pthread.h>
@@ -14,7 +16,7 @@
 #include <sys/ioctl.h>
 #include <string.h>
 #include "platform/audio_ctrl.h"
-//请教DeepSeek实现了简易页面管理器，100ask那个实际上不太好用……
+
 #include "pages/page_manager.h"
 #include "pages/page_main.h"
 #include "pages/page_demo.h"
@@ -23,18 +25,25 @@
 #include "pages/page_calculator.h"
 #include "pages/page_apple.h"
 #include "pages/page_image.h"
+#include "pages/page_ftp.h"
+
 #define DISP_BUF_SIZE (240 * 240)
+
 #define PATH_MAX_LENGTH 256
 extern char homepath[PATH_MAX_LENGTH] = {0};
+
 extern int dispd  = 0;     // 背光
 extern int fbd    = 0;     // 帧缓冲设备
 extern int powerd = 0;     //电源按钮
 extern int homed  = 0;     // 主页按钮
+
 extern uint32_t sleepTs     = -1;
 extern uint32_t homeClickTs = -1;
 extern uint32_t backgroundTs = -1;
+
 extern bool deepSleep  = false;
 extern bool dontDeepSleep  = false;
+
 extern void lcdBrightness(int brightness);
 extern void sysSleep(void);
 extern void sysWake(void);
@@ -43,8 +52,11 @@ extern void setDontDeepSleep(bool b);
 extern void switchRobot(void);
 extern void switchBackground(void);
 extern void switchForeground(void);
+
 extern lv_style_t getFontStyle(const char * filename, uint16_t weight, uint16_t style);
+
 extern uint32_t tick_get(void);
+
 void readKeyPower(void);
 void readKeyHome(void);
 void lcdInit(void);
@@ -53,7 +65,9 @@ void lcdClose(void);
 void lcdRefresh(void);
 void touchOpen(void);
 void touchClose(void);
+
 static lv_style_t style_default;
+
 int main(int argc, char *argv[])
 {
 	
@@ -61,7 +75,9 @@ int main(int argc, char *argv[])
 	#if LV_USE_PERF_MONITOR
 	printf("monitor on\n");
 	#endif
+
     bool isDaemonMode = true;
+
     powerd = open("/dev/input/event1", O_RDWR);
     fcntl(powerd, 4, 2048);
     homed = open("/dev/input/event2", O_RDWR);
@@ -122,21 +138,23 @@ int main(int argc, char *argv[])
     indev_drv.read_cb = evdev_read;
     lv_indev_t *indev = lv_indev_drv_register(&indev_drv);
 	lv_ffmpeg_init();
-    // 保留大佬的Freetype字体初始化（仅字体功能，完全仿照你原代码无任何颜色配置）
+
     lv_freetype_init(128, 4, 0);
     lv_ft_info_t ft_info;
     ft_info.name   = "/mnt/UDISK/lvgl/res/font.ttf";
     ft_info.weight = 16;
     ft_info.style  = FT_FONT_STYLE_NORMAL;
     ft_info.mem    = NULL;
+
     if(lv_ft_font_init(&ft_info)) {
-        // 不初始化自定义主题，完全沿用你原程序的默认样式逻辑
         lv_style_init(&style_default);
         lv_style_set_text_font(&style_default, ft_info.font);
         lv_obj_add_style(lv_scr_act(), &style_default, 0);
     }
+
     page_manager_init();
     page_open(page_main(), NULL);
+
     while(1) {
         readKeyHome();
         if(backgroundTs == -1){
