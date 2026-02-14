@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
     usleep(100000);
     getcwd(homepath, PATH_MAX_LENGTH);
     if(isDaemonMode) daemon(1,0);
+
 	//daemon函数将本程序置于后台，脱离终端
 	//若要进行调试，请使用-d参数
     setenv("TZ", "CST-8", 1);
@@ -183,6 +184,7 @@ int main(int argc, char *argv[])
     close(homed);
     return 0;
 }
+
 /*Set in lv_conf.h as `LV_TICK_CUSTOM_SYS_TIME_EXPR`*/
 uint32_t tick_get(void)
 {
@@ -286,6 +288,7 @@ void sysSleep(void){
 void sysDeepSleep(void){
 	deepSleep = true;
     sleepTs   = -1;
+    
     // 睡死过去，相当省电
     system("echo \"0\" >/sys/class/rtc/rtc0/wakealarm");
     system("echo \"mem\" > /sys/power/state");
