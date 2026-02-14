@@ -444,7 +444,6 @@ static void update_space_info(void)
     FILE * fp;
 
     // 获取/mnt/UDISK分区的总空间和可用空间
-    // df命令输出：文件系统 1K-块 已用 可用 已用% 挂载点
     snprintf(cmd, sizeof(cmd), "df -k /mnt/UDISK | tail -1 | awk '{print $2,$3}'");
     fp = popen(cmd, "r");
 
