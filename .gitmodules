@@ -10,3 +10,4 @@
 [submodule "lv_demos"]
 	path = lv_demos
 	url = https://github.com/lvgl/lv_demos
+
