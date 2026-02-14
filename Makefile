@@ -7,6 +7,7 @@ CFLAGS ?= -O3 -g0 -I$(LVGL_DIR) -I$(LVGL_DIR)/include -Wall -Wshadow -Wundef -Wm
 LDFLAGS ?= -L$(LVGL_DIR)/lib -lavcodec -lavdevice -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale -lz -lasound -lfreetype #-static
 BIN = demo
 
+CFLAGS += -fdiagnostics-color=always
 
 #Collect the files to compile
 MAINSRC = ./main.c
