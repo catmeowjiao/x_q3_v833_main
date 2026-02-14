@@ -60,7 +60,7 @@ lv_obj_t * page_main()
     lv_obj_set_size(btn_calculator, lv_pct(50), lv_pct(25));
     lv_obj_align(btn_calculator, LV_FLEX_ALIGN_CENTER, 0, 0);
     lv_obj_t * btn_label_calculator = lv_label_create(btn_calculator);
-    lv_label_set_text(btn_label_calculator, "计算器");
+    lv_label_set_text(btn_label_calculator, "calculator");
     lv_obj_center(btn_label_calculator);
     lv_obj_add_event_cb(btn_calculator, btn_calculator_click, LV_EVENT_CLICKED, NULL);
 
@@ -77,7 +77,7 @@ lv_obj_t * page_main()
     lv_obj_set_size(btn_totp, lv_pct(50), lv_pct(25));
     lv_obj_align(btn_totp, LV_FLEX_ALIGN_CENTER, 0, 0);
     lv_obj_t * btn_label_totp = lv_label_create(btn_totp);
-    lv_label_set_text(btn_label_totp, "身份验证器");
+    lv_label_set_text(btn_label_totp, "Authenticator");
     lv_obj_center(btn_label_totp);
     lv_obj_add_event_cb(btn_totp, btn_totp_click, LV_EVENT_CLICKED, NULL);
 
@@ -85,7 +85,7 @@ lv_obj_t * page_main()
     lv_obj_set_size(btn_recorder, lv_pct(50), lv_pct(25));
     lv_obj_align(btn_recorder, LV_FLEX_ALIGN_CENTER, 0, 0);
     lv_obj_t * btn_label_recorder = lv_label_create(btn_recorder);
-    lv_label_set_text(btn_label_recorder, "录音机");
+    lv_label_set_text(btn_label_recorder, "recorder");
     lv_obj_center(btn_label_recorder);
     lv_obj_add_event_cb(btn_recorder, btn_recorder_click, LV_EVENT_CLICKED, NULL);
 
@@ -106,6 +106,7 @@ lv_obj_t * page_main()
     lv_obj_center(btn_label_apple);
     lv_obj_add_event_cb(btn_apple, btn_apple_click, LV_EVENT_CLICKED, NULL);
     */
+   
     return screen;
 }
 
