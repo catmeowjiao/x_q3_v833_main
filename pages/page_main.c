@@ -188,7 +188,7 @@ static void timer_battery_tick(lv_event_t * e)
 
     FILE * fp_capacity = fopen("/sys/class/power_supply/battery/capacity", "r");
     FILE * fp_status   = fopen("/sys/class/power_supply/battery/status", "r");
-    FILE * fp_voltage   = fopen("/sys/class/power_supply/battery/voltage_now", "r");
+    FILE * fp_voltage  = fopen("/sys/class/power_supply/battery/voltage_now", "r");
     
     if (fp_capacity != NULL && fp_status != NULL) {
         fscanf(fp_capacity, "%d", &capacity);
