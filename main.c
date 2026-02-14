@@ -17,6 +17,10 @@
 #include <string.h>
 #include "platform/audio_ctrl.h"
 
+<<<<<<< HEAD
+=======
+//请教DeepSeek实现了简易页面管理器，100ask那个实际上不太好用……
+>>>>>>> 42d061ab6d97dfccad0d4d930cd51792603953ef
 #include "pages/page_manager.h"
 #include "pages/page_main.h"
 #include "pages/page_demo.h"
