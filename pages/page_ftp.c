@@ -1,3 +1,4 @@
+//ftp
 #include "page_ftp.h"
 
 static void back_click(lv_event_t * e);

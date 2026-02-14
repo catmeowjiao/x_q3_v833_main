@@ -73,6 +73,14 @@ lv_obj_t * page_main()
     lv_obj_center(btn_label_bird);
     lv_obj_add_event_cb(btn_bird, btn_bird_click, LV_EVENT_CLICKED, NULL);
 
+    lv_obj_t * btn_ftp = lv_btn_create(screen);
+    lv_obj_set_size(btn_ftp, lv_pct(60), lv_pct(25));
+    lv_obj_align(btn_ftp, LV_FLEX_ALIGN_CENTER, 0, 0);
+    lv_obj_t * btn_label_ftp = lv_label_create(btn_ftp);
+    lv_label_set_text(btn_label_ftp, "ftp");
+    lv_obj_center(btn_label_ftp);
+    lv_obj_add_event_cb(btn_ftp, btn_ftp_click, LV_EVENT_CLICKED, NULL);
+
     lv_obj_t * btn_totp = lv_btn_create(screen);
     lv_obj_set_size(btn_totp, lv_pct(50), lv_pct(25));
     lv_obj_align(btn_totp, LV_FLEX_ALIGN_CENTER, 0, 0);
@@ -106,7 +114,7 @@ lv_obj_t * page_main()
     lv_obj_center(btn_label_apple);
     lv_obj_add_event_cb(btn_apple, btn_apple_click, LV_EVENT_CLICKED, NULL);
     */
-   
+
     return screen;
 }
 
