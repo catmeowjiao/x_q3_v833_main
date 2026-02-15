@@ -1,4 +1,7 @@
+#!/bin/bash
+
 make clean
+
 export TOOLCHAIN=$HOME/toolchain
 export PATH=$PATH:$TOOLCHAIN/bin
 export CC=$TOOLCHAIN/bin/arm-openwrt-linux-muslgnueabi-gcc
