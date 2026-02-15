@@ -311,7 +311,7 @@ static void lv_100ask_file_explorer_constructor(const lv_obj_class_t * class_p, 
 
     // 展示在文件浏览列表之上的区域(head)
     explorer->head_area = lv_obj_create(explorer->browser_area);
-    lv_obj_set_size(explorer->head_area, LV_PCT(100), LV_PCT(10));
+    lv_obj_set_size(explorer->head_area, LV_PCT(100), LV_PCT(12));
     lv_obj_clear_flag(explorer->head_area, LV_OBJ_FLAG_SCROLLABLE);
 
 #if LV_100ASK_FILE_EXPLORER_QUICK_ACCESS
@@ -364,7 +364,7 @@ static void lv_100ask_file_explorer_constructor(const lv_obj_class_t * class_p, 
 
     // 目录内容展示列表
     explorer->file_list = lv_table_create(explorer->browser_area);
-    lv_obj_set_size(explorer->file_list, LV_PCT(100), LV_PCT(85));
+    lv_obj_set_size(explorer->file_list, LV_PCT(100), LV_PCT(83));
     lv_table_set_col_width(explorer->file_list, 0, LV_PCT(100));
     lv_table_set_col_cnt(explorer->file_list, 1);
     lv_obj_add_event_cb(explorer->file_list, brower_file_event_handler, LV_EVENT_ALL, obj);
@@ -628,9 +628,10 @@ static void show_dir(lv_obj_t * obj, char * path)
         return;
     }
 
-    /* Do not show current directory '.'; only show parent '..' */
+    lv_table_set_cell_value_fmt(explorer->file_list, index++, 0, LV_SYMBOL_DIRECTORY "  %s", ".");
     lv_table_set_cell_value_fmt(explorer->file_list, index++, 0, LV_SYMBOL_DIRECTORY "  %s", "..");
     lv_table_set_cell_value(explorer->file_list, 0, 1, "0");
+    lv_table_set_cell_value(explorer->file_list, 1, 1, "0");
 
     while(1) {
         res = lv_fs_dir_read(&dir, fn);

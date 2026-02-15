@@ -152,7 +152,7 @@ static void lv_100ask_calc_constructor(const lv_obj_class_t * class_p, lv_obj_t 
     lv_textarea_set_max_length(calc->ta_hist, LV_100ASK_CALC_HISTORY_MAX_LINE);
     lv_textarea_set_align(calc->ta_hist, LV_TEXT_ALIGN_RIGHT);
     lv_textarea_set_text(calc->ta_hist, "");
-    lv_textarea_set_placeholder_text(calc->ta_hist, "HISTORY\t\t");
+    lv_textarea_set_placeholder_text(calc->ta_hist, "CALC HISTORY\t\t");
     lv_obj_set_style_border_width(calc->ta_hist, 0, 0);
 
     /*Input textarea*/

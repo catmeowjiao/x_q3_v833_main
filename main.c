@@ -28,9 +28,6 @@
 #include "pages/page_image.h"
 #include "pages/page_ftp.h"
 
-#define LV_SCR_WIDTH 240
-#define LV_SCR_HEIGHT 240
-
 #define DISP_BUF_SIZE (LV_SCR_WIDTH * LV_SCR_HEIGHT)
 
 #define PATH_MAX_LENGTH 256

@@ -15,6 +15,9 @@
 
 #include "lv_conf.h"
 
+#define LV_SCR_WIDTH 240
+#define LV_SCR_HEIGHT 240
+
 /*********************
  * DELAY INTERFACE
  *********************/
