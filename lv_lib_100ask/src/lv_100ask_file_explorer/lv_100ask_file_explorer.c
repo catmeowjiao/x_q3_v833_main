@@ -591,8 +591,9 @@ static void show_dir(lv_obj_t * obj, char * path)
         return;
     }
 
-    lv_table_set_cell_value_fmt(explorer->file_list, index++, 0, LV_SYMBOL_DIRECTORY "  %s", "..");
-    lv_table_set_cell_value(explorer->file_list, 0, 1, "0");
+    lv_table_set_cell_value_fmt(explorer->file_list, index, 0, LV_SYMBOL_DIRECTORY "  %s", "..");
+    lv_table_set_cell_value(explorer->file_list, index, 1, "0");
+    index++;
 
     while(1) {
         res = lv_fs_dir_read(&dir, fn);
@@ -601,13 +602,12 @@ static void show_dir(lv_obj_t * obj, char * path)
             break;
         }
 
-        /*fn is empty, if not more files to read*/
         if(strlen(fn) == 0) {
             LV_LOG_USER("Not more files to read!");
             break;
         }
 
-        // 识别并展示文件
+        // 识别文件类型并添加对应图标
         if(is_end_with(fn, ".png", false) || is_end_with(fn, ".jpg", false) || is_end_with(fn, ".bmp", false) ||
            is_end_with(fn, ".gif", false)) {
             lv_table_set_cell_value_fmt(explorer->file_list, index, 0, LV_SYMBOL_IMAGE "  %s", fn);
@@ -620,10 +620,9 @@ static void show_dir(lv_obj_t * obj, char * path)
             lv_table_set_cell_value_fmt(explorer->file_list, index, 0, LV_SYMBOL_VIDEO "  %s", fn);
             lv_table_set_cell_value(explorer->file_list, index, 1, "3");
         } else if(is_end_with(fn, ".", false) || is_end_with(fn, "..", false)) {
-            /*is dir*/
-            // lv_table_set_cell_value_fmt(explorer->file_list, index, 0, LV_SYMBOL_DIRECTORY "  %s", fn);
+            /* 忽略 "." 和 ".."（已在开头显式处理）*/
             continue;
-        } else if(fn[0] == '/') { /*is dir*/
+        } else if(fn[0] == '/') { /* 目录（路径以'/'开头）*/
             lv_table_set_cell_value_fmt(explorer->file_list, index, 0, LV_SYMBOL_DIRECTORY "  %s", fn + 1);
             lv_table_set_cell_value(explorer->file_list, index, 1, "0");
         } else {
@@ -632,14 +631,11 @@ static void show_dir(lv_obj_t * obj, char * path)
         }
 
         index++;
-
-        // LV_LOG_USER("%s", fn);
     }
 
     lv_fs_dir_close(&dir);
     lv_table_set_row_cnt(explorer->file_list, index);
     lv_100ask_file_explorer_set_sort(obj, LV_100ASK_EXPLORER_SORT_KIND);
-    // 让table移动到最顶部
     lv_obj_scroll_to_y(explorer->file_list, 0, LV_ANIM_OFF);
 
     lv_memset_00(explorer->cur_path, sizeof(explorer->cur_path));
