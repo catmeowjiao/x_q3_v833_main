@@ -17,9 +17,9 @@ https://github.com/RobinNotBad/lvgl_v833_q3
 * 克隆项目到一个空文件夹中  
 * 安装交叉编译器
 > 例如armhf musl gcc编译器
-* 将项目文件中build.sh的文件路径改为你的编译器路径<br>
+* 将项目文件中` build.sh `的文件路径改为你的编译器路径<br>
 * 运行 ` ./build.sh `
-* 目标文件为"demo"
+* 目标文件为` demo `
 
 ## 其他
 * 字体使用了：阿里巴巴普惠体 Medium、FontAwesome 5 Free Solid，为了在lvgl中正常使用图标，对这两个字体进行了合并。若要换用自己的字体，可以使用FontForge软件，将FontAwesome中 #61440 之后的所有图标复制到现有字体中，再进行大小缩放。
@@ -38,7 +38,7 @@ It can implement simple file browsing, MP3 playback, mini-games, and other funct
 > For example, the armhf musl gcc compiler  
 * Change the file path of `build.sh` in the project to your compiler's path<br>
 * Run ` ./build.sh `  
-* The target file is "demo"
+* The target file is ` demo `
 
 ## Miscellaneous  
 * Fonts used: Alibaba PuHuiTi Medium, FontAwesome 5 Free Solid. To use icons properly in LVGL, these two fonts have been merged. If you want to use your own fonts, you can use FontForge to copy all icons after #61440 in FontAwesome into your existing font, and then adjust the size scaling.
