@@ -26,7 +26,7 @@ https://github.com/RobinNotBad/lvgl_v833_q3
 
 
 ## Platform  
-**SoC: Zhiqiang V833 ARMv7 32-bit**  
+**Allwinner V833 ARMv7 32-bit SoC**  
 Recommended to run on **Alpha Egg Q3 dictionary pen**  
 
 It can implement simple file browsing, MP3 playback, mini-games, and other functions.
