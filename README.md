@@ -18,6 +18,6 @@ https://github.com/RobinNotBad/lvgl_v833_q3
 * 安装交叉编译器
 > 例如armhf musl gcc编译器
 * 将项目文件中build.sh的文件路径改为你的编译器路径<br>
-* 运行./build.sh
+* 运行 '''./build.sh'''
 * 目标文件为"demo"
 
