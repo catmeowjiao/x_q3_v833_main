@@ -16,6 +16,7 @@ static void btn_totp_click(lv_event_t * e);
 static void btn_recorder_click(lv_event_t * e);
 static void timer_time_tick(lv_event_t * e);
 static void timer_battery_tick(lv_event_t * e);
+static void btn_bluetooth_click(lv_event_t * e);
 
 lv_obj_t * page_main()
 {
@@ -104,6 +105,14 @@ lv_obj_t * page_main()
     lv_obj_center(btn_label_demo);
     lv_obj_add_event_cb(btn_demo, btn_demo_click, LV_EVENT_CLICKED, NULL);
 
+    lv_obj_t * btn_bluetooth = lv_btn_create(screen);
+    lv_obj_set_size(btn_bluetooth, lv_pct(50), lv_pct(25));
+    lv_obj_align(btn_bluetooth, LV_FLEX_ALIGN_CENTER, 0, 0);
+    lv_obj_t * btn_label_bluetooth = lv_label_create(btn_bluetooth);
+    lv_label_set_text(btn_label_bluetooth, "蓝牙");
+    lv_obj_center(btn_label_bluetooth);
+    lv_obj_add_event_cb(btn_bluetooth, btn_bluetooth_click, LV_EVENT_CLICKED, NULL);
+
     return screen;
 }
 
@@ -150,6 +159,11 @@ static void btn_apple_click(lv_event_t * e)
 static void btn_recorder_click(lv_event_t * e)
 {
     page_open(page_recorder_create(), NULL);
+}
+
+static void btn_bluetooth_click(lv_event_t * e)
+{
+    page_open(page_bluetooth(), NULL);
 }
 
 static void timer_time_tick(lv_event_t * e)
