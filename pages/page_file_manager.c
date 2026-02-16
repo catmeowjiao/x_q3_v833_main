@@ -49,7 +49,8 @@ static void explorer_event_handler(lv_event_t * e)
 
         if(str_end_with(file_name, ".mp4", false)) page_open(page_apple(&file_name), NULL);
 
-        if(str_end_with(file_name, ".txt", false) || str_end_with(file_name, ".log", false))
+        if(str_end_with(file_name, ".txt", false) || str_end_with(file_name, ".json", false) ||
+           str_end_with(file_name, ".conf", false))
             page_open(page_txt(&file_name), NULL);
     }
 }

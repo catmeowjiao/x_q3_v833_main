@@ -16,6 +16,7 @@ typedef struct
     lv_obj_t * status_label; // 状态标签
     lv_obj_t * scan_btn;     // 扫描按钮
     lv_obj_t * back_btn;     // 返回按钮
+    lv_obj_t * test_btn;     // 测试按钮
 
     // 设备列表
     char devices[50][64]; // 设备名称
@@ -28,6 +29,10 @@ typedef struct
     int init_countdown;      // 初始化倒计时
     lv_timer_t * init_timer; // 初始化定时器
     lv_timer_t * scan_timer; // 扫描超时定时器
+
+    // 当前连接的设备
+    char connected_mac[18]; // 当前已连接设备的MAC地址
+    int is_playing;         // 是否正在播放测试音频
 } bluetooth_page_t;
 
 static bluetooth_page_t bp = {0};
@@ -37,6 +42,7 @@ static void back_click(lv_event_t * e);
 static void switch_event(lv_event_t * e);
 static void scan_click(lv_event_t * e);
 static void table_event(lv_event_t * e);
+static void test_click(lv_event_t * e);
 static void run_bt_test(void);
 static void init_timeout_cb(lv_timer_t * timer);
 static void start_bluetoothd(void);
@@ -140,6 +146,8 @@ lv_obj_t * page_bluetooth(void)
     }
 
     memset(&bp, 0, sizeof(bp));
+    bp.connected_mac[0] = '\0';
+    bp.is_playing       = 0;
 
     bp.screen = lv_obj_create(lv_scr_act());
     lv_obj_remove_style_all(bp.screen);
@@ -163,6 +171,15 @@ lv_obj_t * page_bluetooth(void)
     lv_label_set_text(scan_label, "scan");
     lv_obj_center(scan_label);
     lv_obj_add_event_cb(bp.scan_btn, scan_click, LV_EVENT_CLICKED, NULL);
+
+    // 测试按钮（底部中间）
+    bp.test_btn = lv_btn_create(bp.screen);
+    lv_obj_set_size(bp.test_btn, lv_pct(25), lv_pct(12));
+    lv_obj_align(bp.test_btn, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_t * test_label = lv_label_create(bp.test_btn);
+    lv_label_set_text(test_label, "test");
+    lv_obj_center(test_label);
+    lv_obj_add_event_cb(bp.test_btn, test_click, LV_EVENT_CLICKED, NULL);
 
     // 开关（左上角）
     bp.switch_obj = lv_switch_create(bp.screen);
@@ -193,6 +210,11 @@ lv_obj_t * page_bluetooth(void)
 // 返回按钮点击
 static void back_click(lv_event_t * e)
 {
+    // 停止可能的测试播放
+    if(bp.is_playing) {
+        system("killall aplay 2>/dev/null");
+    }
+
     // 停止扫描和蓝牙服务，但保留bt_test
     stop_scan();
     stop_bluetoothd();
@@ -228,6 +250,12 @@ static void switch_event(lv_event_t * e)
         update_status("off");
         clear_device_list();
         lv_table_set_row_cnt(bp.table, 0);
+        // 清空已连接设备记录
+        bp.connected_mac[0] = '\0';
+        bp.is_playing       = 0;
+        // 恢复测试按钮文字
+        lv_obj_t * label = lv_obj_get_child(bp.test_btn, 0);
+        lv_label_set_text(label, "test");
     }
 }
 
@@ -399,22 +427,26 @@ static void table_event(lv_event_t * e)
     const char * mac = bp.macs[row];
     printf("[BT] Connecting to %s (%s)\n", bp.devices[row], mac);
 
+    // 清空列表（按要求）
     clear_device_list();
     lv_table_set_row_cnt(bp.table, 0);
 
     connect_device(mac);
 }
 
-// 连接设备
+// 连接设备（改进版）
 static void connect_device(const char * mac)
 {
     update_status("pairing...");
     char cmd[128];
+    char output[1024] = {0};
 
+    // 移除可能存在的旧配对
     snprintf(cmd, sizeof(cmd), "bluetoothctl remove %s", mac);
     execute_command(cmd, NULL, 0);
     sleep(1);
 
+    // 配对
     snprintf(cmd, sizeof(cmd), "bluetoothctl pair %s", mac);
     execute_command(cmd, NULL, 0);
     sleep(2);
@@ -422,28 +454,91 @@ static void connect_device(const char * mac)
     update_status("connecting...");
     snprintf(cmd, sizeof(cmd), "bluetoothctl connect %s", mac);
     execute_command(cmd, NULL, 0);
-    sleep(3);
 
+    // 等待连接成功，最多尝试10秒
+    int connected = 0;
+    for(int i = 0; i < 10; i++) {
+        sleep(1);
+        // 检查连接状态
+        snprintf(cmd, sizeof(cmd), "bluetoothctl info %s", mac);
+        memset(output, 0, sizeof(output));
+        execute_command(cmd, output, sizeof(output));
+        if(strstr(output, "Connected: yes") != NULL) {
+            connected = 1;
+            break;
+        }
+        printf("[BT] Waiting for connection... %d/10\n", i + 1);
+    }
+
+    if(!connected) {
+        update_status("connect failed");
+        bp.connected_mac[0] = '\0';
+        return;
+    }
+
+    // 确保设备已信任（有时需要trust）
+    snprintf(cmd, sizeof(cmd), "bluetoothctl trust %s", mac);
+    execute_command(cmd, NULL, 0);
+
+    // 启动bluealsa（如果尚未运行）
     system("killall bluealsa 2>/dev/null");
-    system("bluealsa &");
-    sleep(1);
+    system("bluealsa -p a2dp-sink &");
+    sleep(2); // 给bluealsa一些时间初始化
 
+    // 验证bluealsa是否正常运行
     FILE * fp = popen("ps | grep bluealsa | grep -v grep", "r");
     if(fp) {
         char buf[128];
         if(fgets(buf, sizeof(buf), fp)) {
+            printf("[BT] bluealsa is running\n");
+            // 保存当前连接的MAC地址
+            strcpy(bp.connected_mac, mac);
             update_status("connected");
-            printf("[BT] Connection successful\n");
         } else {
-            update_status("connect failed");
+            update_status("bluealsa failed");
+            bp.connected_mac[0] = '\0';
         }
         pclose(fp);
     } else {
-        update_status("connect timeout");
+        update_status("check failed");
+        bp.connected_mac[0] = '\0';
     }
 }
 
-// 执行命令并捕获输出（可选）
+// 测试按钮点击事件
+static void test_click(lv_event_t * e)
+{
+    lv_obj_t * btn   = lv_event_get_target(e);
+    lv_obj_t * label = lv_obj_get_child(btn, 0);
+
+    if(!bp.is_playing) {
+        // 检查是否有已连接的设备
+        if(strlen(bp.connected_mac) == 0) {
+            update_status("no device");
+            return;
+        }
+
+        // 构造aplay命令
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "aplay -D \"bluealsa:DEV=%s,PROFILE=a2dp\" /mnt/app/factory/play_test.wav &",
+                 bp.connected_mac);
+        printf("[TEST] Executing: %s\n", cmd);
+        system(cmd);
+
+        // 更新按钮文字和状态
+        lv_label_set_text(label, "stop");
+        bp.is_playing = 1;
+        update_status("playing test");
+    } else {
+        // 停止播放
+        system("killall aplay 2>/dev/null");
+        lv_label_set_text(label, "test");
+        bp.is_playing = 0;
+        update_status("stopped");
+    }
+}
+
+// 执行命令并捕获输出
 static void execute_command(const char * cmd, char * output, int max_len)
 {
     printf("[CMD] %s\n", cmd);
