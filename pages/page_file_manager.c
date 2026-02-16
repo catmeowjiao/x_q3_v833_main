@@ -10,8 +10,7 @@ lv_obj_t * page_file_manager()
     lv_obj_set_size(screen, lv_pct(100), lv_pct(100));
 
     lv_obj_t * file_explorer = lv_100ask_file_explorer_create(screen);
-    lv_obj_add_event_cb(file_explorer, explorer_event_handler, 
-							LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(file_explorer, explorer_event_handler, LV_EVENT_VALUE_CHANGED, NULL);
     lv_100ask_file_explorer_open_dir(file_explorer, "//mnt");
 
     lv_obj_t * btn_back = lv_btn_create(screen);
@@ -35,18 +34,21 @@ static void explorer_event_handler(lv_event_t * e)
         char * sel_fn   = lv_100ask_file_explorer_get_sel_fn(obj);
         char file_name[LV_100ASK_FILE_EXPLORER_PATH_MAX_LEN];
 
-        lv_snprintf(file_name, sizeof(file_name), "%s%s", cur_path+1, sel_fn);
+        lv_snprintf(file_name, sizeof(file_name), "%s%s", cur_path + 1, sel_fn);
 
         printf(file_name);
         printf("\n");
 
-        if(str_end_with(file_name, ".png", false) || str_end_with(file_name, ".jpg", false) || str_end_with(file_name, ".jpeg", false) ||
-           str_end_with(file_name, ".bmp", false))
+        if(str_end_with(file_name, ".png", false) || str_end_with(file_name, ".jpg", false) ||
+           str_end_with(file_name, ".jpeg", false) || str_end_with(file_name, ".bmp", false))
             page_open(page_image(&file_name), NULL);
 
-        if(str_end_with(file_name, ".mp3", false) || str_end_with(file_name, ".wav", false) || str_end_with(file_name, ".ogg", false) ||
-           str_end_with(file_name, ".m4a", false))
+        if(str_end_with(file_name, ".mp3", false) || str_end_with(file_name, ".wav", false) ||
+           str_end_with(file_name, ".ogg", false) || str_end_with(file_name, ".m4a", false))
             page_open(page_audio(&file_name), NULL);
+
+        if(str_end_with(file_name, ".txt", false) || str_end_with(file_name, ".log", false))
+            page_open(page_txt(&file_name), NULL);
     }
 }
 
