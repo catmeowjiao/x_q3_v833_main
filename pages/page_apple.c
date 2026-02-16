@@ -2,23 +2,32 @@
 
 static void back_click(lv_event_t * e);
 
-lv_obj_t * page_apple()
+static ff_player_t * ffplayer;
+
+lv_obj_t * page_apple(char * filename)
 {
     lv_obj_t * screen = lv_obj_create(lv_scr_act());
     lv_obj_remove_style_all(screen);
     lv_obj_set_size(screen, lv_pct(100), lv_pct(100));
 
-    
-    lv_obj_t * player = lv_ffmpeg_player_create(screen);
-    lv_obj_set_size(player, lv_pct(100), lv_pct(75));
-    lv_ffmpeg_player_set_src(player, "./res/BadApple.mp4");
-    lv_ffmpeg_player_set_auto_restart(player, false);
-    //player->ffmpeg_ctx->skip_frame = AVDISCARD_NONKEY;
-    //lv_ffmpeg_player_set_volume(player, 100);
-    //lv_ffmpeg_player_set_mute(player, false);
-    //lv_ffmpeg_player_set_zoom_mode(player, LV_FFMPEG_PLAYER_ZOOM_MODE_FIT);
-    lv_ffmpeg_player_set_cmd(player, LV_FFMPEG_PLAYER_CMD_START);
-    lv_obj_center(player);
+    setDontDeepSleep(true);
+    system("echo 1 > /dev/spk_crtl");
+
+    lv_img_header_t header;
+    ffmpeg_get_img_header(filename, &header);
+    lv_obj_t * img = lv_img_create(screen);
+    double scale_default  = fmin((double)LV_SCR_WIDTH / header.w, (double)LV_SCR_HEIGHT / header.h);
+    lv_coord_t img_scaled_w   = (lv_coord_t)(header.w * scale_default);
+    lv_coord_t img_scaled_h   = (lv_coord_t)(header.h * scale_default);
+    lv_obj_set_size(img, img_scaled_w, img_scaled_h);
+    lv_obj_center(img);
+
+    ffplayer = player_create();
+    if(player_open(ffplayer, filename) == 0 
+        && player_init_audio(ffplayer) == 0 && player_init_video(ffplayer, img) == 0) {
+        player_resume(ffplayer);
+    } else
+        ffplayer = NULL;
 
     lv_obj_t * btn_back = lv_btn_create(screen);
     lv_obj_set_size(btn_back, lv_pct(25), lv_pct(12));
@@ -33,5 +42,8 @@ lv_obj_t * page_apple()
 
 static void back_click(lv_event_t * e)
 {
+    system("echo 0 > /dev/spk_crtl");
+    setDontDeepSleep(false);
+    if(ffplayer) player_destroy(ffplayer);
     page_back();
 }

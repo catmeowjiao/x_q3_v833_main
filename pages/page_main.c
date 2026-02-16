@@ -104,16 +104,6 @@ lv_obj_t * page_main()
     lv_obj_center(btn_label_demo);
     lv_obj_add_event_cb(btn_demo, btn_demo_click, LV_EVENT_CLICKED, NULL);
 
-    /*
-    lv_obj_t * btn_apple = lv_btn_create(screen);
-    lv_obj_set_size(btn_apple, lv_pct(50), lv_pct(25));
-    lv_obj_align(btn_apple, LV_FLEX_ALIGN_CENTER, 0, 0);
-    lv_obj_t * btn_label_apple = lv_label_create(btn_apple);
-    lv_label_set_text(btn_label_apple, "apple");
-    lv_obj_center(btn_label_apple);
-    lv_obj_add_event_cb(btn_apple, btn_apple_click, LV_EVENT_CLICKED, NULL);
-    */
-
     return screen;
 }
 
