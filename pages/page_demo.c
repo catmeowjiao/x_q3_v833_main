@@ -1,45 +1,29 @@
 #include "page_demo.h"
-#include <stdlib.h>
-#include <stdio.h>
 
 static void slider1_changed(lv_event_t * e);
 static void btn_click(lv_event_t * e);
-static void switch_changed(lv_event_t * e);
 
 static bool led_switch_state = false;
 
 lv_obj_t * page_demo() {
     lv_obj_t * screen = lv_obj_create(lv_scr_act());
+    //lv_obj_remove_style_all(screen);
     lv_obj_set_size(screen, lv_pct(100), lv_pct(100));
 
     lv_obj_set_flex_flow(screen, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_scroll_dir(screen, LV_DIR_VER);
 
-	lv_obj_t * battery_label = lv_label_create(screen);
-	
-	// 读取电量
-	FILE *fp = fopen("/sys/class/power_supply/battery/capacity", "r");
-	if (fp) {
-		int capacity;
-		if (fscanf(fp, "%d", &capacity) == 1) {
-			char text[32];
-			snprintf(text, sizeof(text), "Battery: %d%%", capacity);
-			lv_label_set_text(battery_label, text);
-		} else {
-			lv_label_set_text(battery_label, "Battery: --%");
-		}
-		fclose(fp);
-	} else {
-		lv_label_set_text(battery_label, "Battery: --%");
-	}
-	
-	lv_obj_align(battery_label, LV_ALIGN_TOP_RIGHT, -10, 10);
-	
-	lv_obj_t * label1 = lv_label_create(screen);
-	lv_label_set_text(label1, "Hello World!");
+    cJSON * cjson_test    = cJSON_Parse("{\"code\":0, \"content\":\"Hello World!\"}");
+    cJSON * cjson_code = cJSON_GetObjectItem(cjson_test, "code");
+    cJSON * cjson_content = cJSON_GetObjectItem(cjson_test, "content");
+
+    lv_obj_t * label1 = lv_label_create(screen);
+	lv_label_set_text(label1, cjson_content->valuestring);
 	lv_obj_align(label1, LV_FLEX_ALIGN_CENTER, 0, 0);
 
-	lv_obj_t * slider1 = lv_slider_create(screen);
+    cJSON_Delete(cjson_test);
+
+    lv_obj_t * slider1 = lv_slider_create(screen);
 	lv_obj_set_size(slider1, lv_pct(80), lv_pct(10));
 	lv_obj_align(slider1, LV_FLEX_ALIGN_CENTER, 0, 0);
 	lv_slider_set_range(slider1, 1, 255);
@@ -66,8 +50,6 @@ lv_obj_t * page_demo() {
 	lv_obj_center(btn_label);
 	lv_obj_add_event_cb(btn, btn_click, LV_EVENT_CLICKED, NULL);
 
-    led_switch_state = false;
-
 	return screen;
 }
 
@@ -76,6 +58,7 @@ static void slider1_changed(lv_event_t * e) {
     int value = lv_slider_get_value(slider);
     lcdBrightness(value);
 }
+
 
 static void btn_click(lv_event_t * e) {
     if (led_switch_state) {

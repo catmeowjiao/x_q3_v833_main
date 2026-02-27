@@ -1,5 +1,8 @@
 #include "page_ftp.h"
 
+#define VSFTPD_EXE "/mnt/UDISK/lvgl/tools/ftp/vsftpd"
+#define VSFTPD_CONF "/mnt/UDISK/lvgl/tools/ftp/vsftpd.conf"
+
 static void back_click(lv_event_t * e);
 static void btn_start_click(lv_event_t * e);
 static void btn_stop_click(lv_event_t * e);
@@ -72,20 +75,28 @@ static void back_click(lv_event_t * e)
 
 static void btn_start_click(lv_event_t * e)
 {
+<<<<<<< Updated upstream
     system("chmod 777 /mnt/UDISK/vsftpd");
+=======
+    system("chmod 777 " VSFTPD_EXE);
+>>>>>>> Stashed changes
 
     pid_t cpid = fork();
 
     if(cpid == 0) {
         //此处为子进程
+<<<<<<< Updated upstream
         const char * path = "/mnt/UDISK/vsftpd";
         char * argv[]     = {"/mnt/UDISK/vsftpd", "/mnt/UDISK/vsftpd.conf", NULL};
         execv(path, argv);
+=======
+        char * argv[]     = {VSFTPD_EXE, VSFTPD_CONF, NULL};
+        execv(VSFTPD_EXE, argv);
+>>>>>>> Stashed changes
         
         exit(127);  //防止意外执行失败
     }
 
-    //system("/mnt/UDISK/vsftpd /mnt/UDISK/vsftpd.conf &");
 }
 
 static void btn_stop_click(lv_event_t * e)
