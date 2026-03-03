@@ -1,7 +1,7 @@
 #include "page_ftp.h"
 
-#define VSFTPD_EXE "/mnt/UDISK/lvgl/tools/ftp/vsftpd"
-#define VSFTPD_CONF "/mnt/UDISK/lvgl/tools/ftp/vsftpd.conf"
+#define VSFTPD_EXE "/mnt/UDISK/tools/ftp/vsftpd"
+#define VSFTPD_CONF "/mnt/UDISK/tools/ftp/vsftpd.conf"
 
 static void back_click(lv_event_t * e);
 static void btn_start_click(lv_event_t * e);
