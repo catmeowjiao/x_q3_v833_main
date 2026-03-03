@@ -329,15 +329,13 @@ lv_obj_t * page_totp(void) {
         lv_obj_align(timer_label, LV_ALIGN_BOTTOM_MID, 0, -6);
         
     } else {
-        // 修改点3：没有密钥时显示提示信息
         // 显示大标题 "No Secret Key"
         lv_obj_t *error_label = lv_label_create(screen);
         lv_label_set_text(error_label, "No Secret Key");
         lv_obj_set_style_text_color(error_label, lv_color_make(255, 0, 0), 0);
-        lv_obj_set_style_text_font(error_label, &lv_font_montserrat_28, 0); // 保持大字体
+        lv_obj_set_style_text_font(error_label, &lv_font_montserrat_16, 0); // 保持大字体
         lv_obj_align(error_label, LV_ALIGN_CENTER, 0, -20); // 向上偏移一点
         
-        // 显示小字路径提示 "Location /mnt/UDISK/key.txt"
         lv_obj_t *path_label = lv_label_create(screen);
         char path_text[60];
         snprintf(path_text, sizeof(path_text), "Location %s", key_path);
