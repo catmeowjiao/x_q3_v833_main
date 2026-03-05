@@ -11,11 +11,18 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pthread.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <string.h>
 #include "platform/audio_ctrl.h"
+
+// 添加 FFmpeg 所需头文件
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+#include <libavutil/imgutils.h>
 
 //请教DeepSeek实现了简易页面管理器，100ask那个实际上不太好用……
 #include "pages/page_manager.h"
@@ -69,6 +76,136 @@ void touchOpen(void);
 void touchClose(void);
 
 static lv_style_t style_default;
+
+static uint32_t last_screenshot_time = 0;
+static uint32_t power_down_time = 0;
+static uint32_t home_down_time = 0;
+static int combo_triggered = 0;
+
+static void take_screenshot(void) {
+    uint32_t now = tick_get();
+    // 1秒内不重复截图
+    if (now - last_screenshot_time < 1000) {
+        printf("[Screenshot] Ignored (too frequent)\n");
+        return;
+    }
+    last_screenshot_time = now;
+
+    const char *raw_path = "/mnt/UDISK/fb_data.raw";
+    const char *shot_dir = "/mnt/UDISK/screenshot";
+    char png_path[128];
+    time_t t;
+    struct tm *tm;
+    FILE *raw_fp;
+    uint8_t *fb_data;
+    long raw_size;
+    int ret;
+
+    mkdir(shot_dir, 0755);
+    t = time(NULL);
+    tm = localtime(&t);
+    snprintf(png_path, sizeof(png_path), "%s/screen_%04d%02d%02d_%02d%02d%02d.png",
+             shot_dir,
+             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+             tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+    ret = system("dd if=/dev/fb0 of=/mnt/UDISK/fb_data.raw bs=1M 2>/dev/null");
+    if (ret != 0) {
+        printf("[Screenshot] dd failed\n");
+        return;
+    }
+
+    raw_fp = fopen(raw_path, "rb");
+    if (!raw_fp) {
+        printf("[Screenshot] Cannot open raw file\n");
+        return;
+    }
+    fseek(raw_fp, 0, SEEK_END);
+    raw_size = ftell(raw_fp);
+    fseek(raw_fp, 0, SEEK_SET);
+    fb_data = malloc(raw_size);
+    if (!fb_data) {
+        printf("[Screenshot] malloc failed\n");
+        fclose(raw_fp);
+        unlink(raw_path);
+        return;
+    }
+    fread(fb_data, 1, raw_size, raw_fp);
+    fclose(raw_fp);
+    unlink(raw_path);
+
+    AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_PNG);
+    if (!codec) {
+        printf("[Screenshot] PNG encoder not found\n");
+        free(fb_data);
+        return;
+    }
+
+    AVCodecContext *c = avcodec_alloc_context3(codec);
+    if (!c) {
+        printf("[Screenshot] Failed to alloc context\n");
+        free(fb_data);
+        return;
+    }
+
+    c->width = 240;
+    c->height = 240;
+    c->time_base = (AVRational){1, 25};
+    c->pix_fmt = AV_PIX_FMT_RGBA;
+
+    if (avcodec_open2(c, codec, NULL) < 0) {
+        printf("[Screenshot] avcodec_open2 failed\n");
+        avcodec_free_context(&c);
+        free(fb_data);
+        return;
+    }
+
+    AVFrame *frame = av_frame_alloc();
+    frame->width = c->width;
+    frame->height = c->height;
+    frame->format = c->pix_fmt;
+    av_frame_get_buffer(frame, 0);
+
+    // 转换RGBA
+    for (int y = 0; y < c->height; y++) {
+        uint8_t *src = fb_data + y * c->width * 4;
+        uint8_t *dst = frame->data[0] + y * frame->linesize[0];
+        for (int x = 0; x < c->width; x++) {
+            uint8_t b = src[0];
+            uint8_t g = src[1];
+            uint8_t r = src[2];
+            uint8_t a = src[3];
+            dst[0] = r;
+            dst[1] = g;
+            dst[2] = b;
+            dst[3] = a;
+            src += 4;
+            dst += 4;
+        }
+    }
+
+    AVPacket *pkt = av_packet_alloc();
+    ret = avcodec_send_frame(c, frame);
+    if (ret >= 0) {
+        ret = avcodec_receive_packet(c, pkt);
+        if (ret >= 0) {
+            FILE *out = fopen(png_path, "wb");
+            if (out) {
+                fwrite(pkt->data, 1, pkt->size, out);
+                fclose(out);
+                printf("[Screenshot] Saved: %s\n", png_path);
+            } else {
+                printf("[Screenshot] Cannot create PNG file\n");
+            }
+            av_packet_unref(pkt);
+        }
+    }
+
+    av_packet_free(&pkt);
+    av_frame_free(&frame);
+    avcodec_free_context(&c);
+    free(fb_data);
+}
 
 int main(int argc, char *argv[])
 {
@@ -277,21 +414,30 @@ void lcdBrightness(int brightness) {
 void readKeyPower(void) {
     char buffer[16] = {0};
     while (read(powerd, buffer, 0x10u) > 0) {
-		if(buffer[10] != 0x74) return;
+        if(buffer[10] != 0x74) return;
 
-		if(buffer[12] == 0x00) {
-			printf("[key]power_up\n");
-			if(sleepTs == -1 && !deepSleep) {
-				sysSleep();
-			}
-			else {
-				sysWake();
-			}
-		}
-		else {
-			printf("[key]power_down\n");
-		}
-	}
+        if(buffer[12] == 0x00) {
+            printf("[key]power_up\n");
+
+            // 判断是否组合键
+            uint32_t now = tick_get();
+            if (home_down_time > power_down_time && (now - power_down_time < 500)) {
+                combo_triggered = 1;
+                take_screenshot();
+                printf("[key] combo detected, skip sleep/wake\n");
+            } else {
+                if(sleepTs == -1 && !deepSleep) {
+                    sysSleep();
+                } else {
+                    sysWake();
+                }
+            }
+            power_down_time = 0;
+        } else {
+            printf("[key]power_down\n");
+            power_down_time = tick_get();
+        }
+    }
 }
 
 void readKeyHome(void)
@@ -302,6 +448,13 @@ void readKeyHome(void)
 
         if(buffer[12] == 0x00) {
             printf("[key]home_up\n");
+            if (combo_triggered) {
+                combo_triggered = 0;
+                printf("[key] combo already handled, skip screenshot\n");
+            } else {
+                take_screenshot();
+            }
+
             uint32_t ts = tick_get();
             if(homeClickTs != -1 && ts - homeClickTs <= 300) {
                 switchForeground();
@@ -311,6 +464,7 @@ void readKeyHome(void)
             }
         } else {
             printf("[key]home_down\n");
+            home_down_time = tick_get();  // 记录按下时间
         }
     }
 }
