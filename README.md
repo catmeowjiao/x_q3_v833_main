@@ -12,6 +12,14 @@ https://github.com/RobinNotBad/lvgl_v833_q3
 
 可以实现简易的文件浏览、MP3、小游戏等功能
 
+##一些截图
+<img width="240" height="240" alt="screen_20260305_204625" src="https://github.com/user-attachments/assets/39bdb3d3-135b-48b2-9b01-f2078dcbd333" />
+<img width="240" height="240" alt="screen_20260305_204442" src="https://github.com/user-attachments/assets/4e95439b-3b6e-4b4e-8d7a-a2ac0895bbea" />
+<img width="240" height="240" alt="screen_20260305_204629" src="https://github.com/user-attachments/assets/384b2831-f009-482c-9400-797526cc62f0" />
+
+
+
+
 ## 怎么从项目源代码编译
 * 建议使用**linux系统** 
 * 克隆项目到一个空文件夹中  
